@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="referrer" content="no-referrer">
+    
+    <title>代購全能王 22.0 (最終救贖版)</title>
+    <style>
+        :root { --primary: #1a5f7a; --secondary: #27ae60; --danger: #e74c3c; --bg: #f4f7f6; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: var(--bg); color: #333; margin: 0; padding: 10px; }
+        .container { max-width: 1100px; margin: 0 auto; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        
+        .top-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 2px solid var(--primary); padding-bottom: 10px; }
+        h1 { color: var(--primary); margin: 0; font-size: 1.2rem; }
+        .btn-reset { background: var(--danger); color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: bold; }
+
+        /* 模式切換 - 手機版優化 */
+        .view-tabs { display: flex; gap: 5px; margin-bottom: 15px; justify-content: center; background: #eee; padding: 5px; border-radius: 10px; overflow-x: auto; white-space: nowrap;}
+        .tab-btn { flex: 1; padding: 10px 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 0.9rem; transition: 0.3s; background: transparent; color: #666; }
+        .tab-btn.active { background: var(--primary); color: white; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+
+        /* 後台設定 */
+        .admin-settings { background: #e8f4f8; padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid #b3e5fc; }
+        .control-panel { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+        .input-group { flex: 1; min-width: 120px; }
+        label { display: block; margin-bottom: 4px; font-weight: bold; color: var(--primary); font-size: 0.85rem; }
+        input[type="number"], input[type="text"], select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 1rem; }
+        
+        .upload-section { border-top: 1px solid #b3e5fc; padding-top: 15px; display: flex; flex-direction: column; gap: 10px; }
+        .upload-box { background: white; padding: 10px; border-radius: 6px; border: 2px dashed #3498db; text-align: center; font-weight: bold;}
+        .upload-box input { width: 100%; cursor: pointer; margin-top: 5px;}
+
+        /* 客人資料 */
+        .customer-info { display: flex; flex-wrap: wrap; gap: 10px; background: #f8f9fa; padding: 15px; border-radius: 10px; margin-bottom: 15px; border-left: 5px solid var(--primary); }
+
+        /* 表格區塊 */
+        .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        table { width: 100%; border-collapse: collapse; background: white; min-width: 700px;}
+        th { background: var(--primary); color: white; padding: 12px 10px; text-align: left; font-size: 0.9rem; }
+        td { padding: 12px 10px; border-bottom: 1px solid #eee; vertical-align: middle; font-size: 0.95rem; }
+        
+        .item-img { width: 60px; height: 60px; object-fit: contain; border-radius: 8px; border: 1px solid #eee; background: white; }
+        .qty-input { width: 65px; padding: 8px; text-align: center; font-weight: bold; border: 2px solid #ccc; border-radius: 6px; background: #fffde7; font-size: 1rem;}
+        .qty-input:focus { border-color: #3498db; outline: none; background: white;}
+        
+        .price-tag { font-weight: bold; color: var(--secondary); }
+        .subtotal-tag { font-weight: bold; color: var(--primary); }
+
+        /* 底部總計 */
+        .total-section { padding: 15px; text-align: right; border-radius: 10px; margin-top: 15px; }
+        .order-total-bg { background: #f1f8ff; border: 1px solid #d1e9ff; }
+        .inv-total-bg { background: #fff3e0; border: 1px solid #ffe0b2; }
+        .grand-total { font-size: 1.8rem; font-weight: bold; color: var(--danger); margin-left: 10px;}
+
+        /* 按鈕 */
+        .btn-sheet { background: #0f9d58; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; font-size: 1rem; margin-top: 5px;}
+        .btn-sheet:hover { background: #0b8043; }
+        .btn-print { background: var(--secondary); color: white; border: none; padding: 15px; width: 100%; border-radius: 10px; font-size: 1.1rem; font-weight: bold; margin-top: 15px; }
+        .btn-add { background:#8e44ad; color:white; border:none; padding:12px; border-radius:6px; cursor:pointer; font-weight:bold; width: 100%;}
+
+        /* 隱藏邏輯 */
+        .sec-admin, .sec-order, .sec-inv { display: none; }
+        .col-jpy, .col-twd-cost, .col-price, .col-stock, .col-orderqty, .col-subtotal, .col-invtotal, .col-action { display: none; }
+
+        body.view-admin .sec-admin { display: block; }
+        body.view-admin .col-jpy, body.view-admin .col-price, body.view-admin .col-stock, body.view-admin .col-action { display: table-cell; }
+
+        body.view-quote .col-price { display: table-cell; }
+
+        body.view-order .sec-order { display: block; }
+        body.view-order .col-price, body.view-order .col-orderqty, body.view-order .col-subtotal { display: table-cell; }
+
+        body.view-inv .sec-inv { display: block; }
+        body.view-inv .col-jpy, body.view-inv .col-twd-cost, body.view-inv .col-stock, body.view-inv .col-invtotal { display: table-cell; }
+
+        @media print {
+            .view-tabs, .sec-admin, .btn-reset, #printBtn, .btn-sheet, .del-btn { display: none !important; }
+            body { padding: 0; background: white; }
+            .container { box-shadow: none; padding: 0; max-width: 100%; }
+            .customer-info { border: 1px solid #ccc; }
+            .qty-input { border: none; background: transparent; padding: 0;}
+        }
+    </style>
+</head>
+<body class="view-admin">
+
+<div class="container">
+    <div class="top-header">
+        <h1>📊 代購管理後台</h1>
+        <button class="btn-reset sec-admin" onclick="resetAll()">🧹 清空重來</button>
+    </div>
+
+    <div class="view-tabs">
+        <button id="btnAdmin" class="tab-btn active" onclick="switchView('admin')">1.內部管理</button>
+        <button id="btnQuote" class="tab-btn" onclick="switchView('quote')">2.純報價單</button>
+        <button id="btnOrder" class="tab-btn" onclick="switchView('order')">3.購物結帳</button>
+        <button id="btnInv" class="tab-btn" onclick="switchView('inv')" style="color:#d35400;">📦 4.盤點單</button>
+    </div>
+
+    <div class="admin-settings sec-admin">
+        <div class="control-panel">
+            <div class="input-group"><label>日幣匯率</label><input type="number" id="exchangeRate" value="0.215" step="0.001" oninput="renderTable()"></div>
+            <div class="input-group"><label>加成 (%)</label><input type="number" id="markup" value="10" step="1" oninput="renderTable()"></div>
+        </div>
+        <div class="upload-section">
+            <div class="upload-box">
+                <label style="color:var(--primary);">📥 點此上傳大國藥妝訂單檔 (.html)</label>
+                <input type="file" id="htmlFileInput" accept=".html,.htm">
+            </div>
+            <button class="btn-sheet" onclick="copyToGoogleSheet()">📋 複製所有資料到 Google Sheet</button>
+            <button class="btn-add" onclick="document.getElementById('manualAddArea').style.display='block'">➕ 手動加品項</button>
+        </div>
+
+        <div id="manualAddArea" style="display:none; margin-top:15px; background:white; padding:15px; border-radius:8px; border:1px solid #ddd;">
+            <div class="control-panel" style="margin:0;">
+                <input type="text" id="mName" placeholder="商品名稱" style="flex:2;">
+                <input type="number" id="mPrice" placeholder="定價(TWD)" style="flex:1;">
+                <button onclick="addManualItem()" style="background:var(--secondary); color:white; border:none; padding:10px; border-radius:6px; font-weight:bold;">確認</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="customer-info sec-order">
+        <div class="input-group"><label>👤 客人姓名</label><input type="text" id="custName" oninput="saveToStorage()"></div>
+        <div class="input-group">
+            <label>💳 付款方式</label>
+            <select id="payMethod" onchange="saveToStorage()"><option value="銀行匯款">銀行匯款</option><option value="現金付款">現金付款</option></select>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th style="width:60px; text-align:center;">照片</th>
+                    <th>商品名稱</th>
+                    <th class="col-jpy">日幣成本</th>
+                    <th class="col-twd-cost">單件成本</th>
+                    <th class="col-price">單個售價</th>
+                    <th class="col-stock">進貨庫存</th>
+                    <th class="col-orderqty">客人購買</th>
+                    <th class="col-subtotal">小計</th>
+                    <th class="col-invtotal">庫存值</th>
+                    <th class="col-action" style="text-align:center;">刪</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+
+    <div class="total-section order-total-bg sec-order"><span>應付總額：</span><span class="grand-total" id="grandTotalOrder">NT$ 0</span></div>
+    <div class="total-section inv-total-bg sec-inv"><span style="color:#d35400;">庫存總值(壓貨)：</span><span class="grand-total" id="grandTotalInv" style="color:#e67e22;">NT$ 0</span></div>
+    <div class="sec-order" style="margin-top:15px;"><label style="font-weight:bold; color:var(--primary);">✨ 許願池 / 備註</label><textarea id="wishlist" oninput="saveToStorage()"></textarea></div>
+
+    <button id="printBtn" class="btn-print" onclick="window.print()">🖨️ 存成 PDF 傳給客人</button>
+</div>
+
+<script>
+let items = []; 
+const storageKey = 'order_items_v22';
+
+window.onload = function() {
+    const saved = localStorage.getItem(storageKey);
+    if (saved) items = JSON.parse(saved);
+    document.getElementById('custName').value = localStorage.getItem('cust_name') || '';
+    document.getElementById('exchangeRate').value = localStorage.getItem('ex_rate') || '0.215';
+    document.getElementById('markup').value = localStorage.getItem('markup') || '10';
+    document.getElementById('wishlist').value = localStorage.getItem('wishlist') || '';
+    switchView('admin');
+    renderTable();
+};
+
+function saveToStorage() {
+    localStorage.setItem(storageKey, JSON.stringify(items));
+    localStorage.setItem('cust_name', document.getElementById('custName').value);
+    localStorage.setItem('ex_rate', document.getElementById('exchangeRate').value);
+    localStorage.setItem('markup', document.getElementById('markup').value);
+    localStorage.setItem('wishlist', document.getElementById('wishlist').value);
+}
+
+// 🔥 100% 絕對修復版解析引擎 (支援分行掃描)
+document.getElementById('htmlFileInput').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(event) {
+        let htmlStr = event.target.result;
+        // 把所有換行元素打斷
+        htmlStr = htmlStr.replace(/<br\s*\/?>/gi, '\n');
+        htmlStr = htmlStr.replace(/<\/div>|<\/p>|<\/li>|<\/tr>/gi, '\n');
+
+        const doc = new DOMParser().parseFromString(htmlStr, 'text/html');
+        doc.querySelectorAll('script, style, noscript, nav, header, footer').forEach(e => e.remove());
+
+        // 把圖片轉成文字記號
+        doc.querySelectorAll('img').forEach(img => {
+            let src = img.getAttribute('data-src') || img.getAttribute('src') || img.getAttribute('data-original');
+            if (src && src.includes('cybassets')) {
+                if (src.startsWith('//')) src = 'https:' + src;
+                const textNode = doc.createTextNode('\n[IMG]' + src + '[/IMG]\n');
+                img.parentNode.insertBefore(textNode, img);
+            }
+        });
+
+        const lines = doc.body.textContent.split('\n').map(l => l.trim()).filter(l => l !== '');
+        
+        let currentImgUrl = '';
+        let nameParts = [];
+        let currentJpyPrice = null;
+        let currentQty = null;
+
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+
+            if (line.startsWith('[IMG]')) {
+                currentImgUrl = line.replace('[IMG]', '').replace('[/IMG]', '');
+                nameParts = []; 
+                currentJpyPrice = null;
+                currentQty = null;
+                continue;
+            }
+
+            if (line.includes('小計') || line.includes('已出貨') || line.includes('已收貨') || line.includes('訂單') || line.includes('購物車')) {
+                nameParts = [];
+                continue;
+            }
+
+            const pMatch = line.match(/¥\s*([\d,]+)/);
+            const qMatch = line.match(/數量\s*[：:]?\s*(\d+)/);
+
+            // 分開紀錄價格和數量 (解決不同行的問題)
+            if (pMatch) currentJpyPrice = parseInt(pMatch[1].replace(/,/g, ''));
+            if (qMatch) currentQty = parseInt(qMatch[1]);
+
+            // 三要件到齊就存入
+            if (currentJpyPrice !== null && currentQty !== null && nameParts.length > 0) {
+                let name = nameParts.join(' - ');
+                if (!items.find(item => item.name === name)) {
+                    items.push({
+                        id: Date.now() + Math.random(),
+                        name: name,
+                        originalImg: currentImgUrl,
+                        img: getHighResUrl(currentImgUrl),
+                        jpy: currentJpyPrice,
+                        stock: currentQty,
+                        orderQty: 0,
+                        isManual: false
+                    });
+                }
+                nameParts = [];
+                currentImgUrl = '';
+                currentJpyPrice = null;
+                currentQty = null;
+                continue;
+            }
+
+            if (pMatch || qMatch) continue;
+
+            if (!nameParts.includes(line) && !line.includes('http')) {
+                nameParts.push(line);
+                if (nameParts.length > 3) nameParts.shift();
+            }
+        }
+
+        renderTable();
+        saveToStorage();
+        document.getElementById('htmlFileInput').value = '';
+    };
+    reader.readAsText(file);
+});
+
+function getHighResUrl(url) {
+    try {
+        if (url.includes('cdn.cybassets.com/media/')) {
+            const match = url.match(/\/media\/([A-Za-z0-9\-_]+)\./);
+            if (match) {
+                let b64 = match[1];
+                while (b64.length % 4) b64 += '=';
+                b64 = b64.replace(/-/g, '+').replace(/_/g, '/');
+                const decoded = decodeURIComponent(escape(window.atob(b64)));
+                const json = JSON.parse(decoded);
+                if (json && json.length > 0 && json[0][0] === 'f') {
+                    const newJson = [json[0]];
+                    let newB64 = window.btoa(unescape(encodeURIComponent(JSON.stringify(newJson))));
+                    newB64 = newB64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+                    return url.replace(match[1], newB64).split('?')[0];
+                }
+            }
+        }
+    } catch (e) {}
+    return url; 
+}
+
+function addManualItem() {
+    const name = document.getElementById('mName').value;
+    const price = parseInt(document.getElementById('mPrice').value);
+    if (!name || !price) return alert("請填寫名稱與定價！");
+    
+    items.push({ id: Date.now(), name: name, originalImg: "", img: "", jpy: 0, stock: 0, orderQty: 1, isManual: true, manualTwd: price });
+    renderTable(); saveToStorage();
+    document.getElementById('mName').value = ""; document.getElementById('mPrice').value = ""; document.getElementById('manualAddArea').style.display = 'none';
+}
+
+function deleteItem(id) { items = items.filter(i => i.id !== id); renderTable(); saveToStorage(); }
+function updateStock(id, val) { const item = items.find(i => i.id === id); if (item) item.stock = parseInt(val) || 0; saveToStorage(); calculateTotals(); }
+function updateOrderQty(id, val) { const item = items.find(i => i.id === id); if (item) item.orderQty = parseInt(val) || 0; saveToStorage(); calculateTotals(); }
+
+function renderTable() {
+    const tbody = document.getElementById('tableBody');
+    const rate = parseFloat(document.getElementById('exchangeRate').value) || 0;
+    const markup = parseFloat(document.getElementById('markup').value) / 100 || 0;
+    tbody.innerHTML = '';
+
+    items.forEach(item => {
+        const unitPrice = item.isManual ? item.manualTwd : Math.round((item.jpy * rate) * (1 + markup));
+        const costPrice = item.isManual ? item.manualTwd : Math.round(item.jpy * rate);
+
+        // 圖片防護網：加上 wsrv.nl 突破手機 Safari 限制
+        const finalImgUrl = item.originalImg ? `https://wsrv.nl/?url=${encodeURIComponent(item.originalImg)}&w=200` : "";
+        const imgTag = item.originalImg 
+            ? `<img src="${finalImgUrl}" class="item-img" onerror="this.src='${item.originalImg}'; this.onerror=null;">` 
+            : `<div class="img-placeholder">📦</div>`;
+
+        const row = document.createElement('tr');
+        row.id = `row-${item.id}`;
+        row.innerHTML = `
+            <td style="text-align: center;">${imgTag}</td>
+            <td style="font-weight: 500;">${item.name}</td>
+            <td class="col-jpy" style="color:#7f8c8d;">¥${item.jpy}</td>
+            <td class="col-twd-cost" style="color:#e67e22;">NT$ ${costPrice}</td>
+            <td class="col-price price-tag">NT$ ${unitPrice}</td>
+            <td class="col-stock"><input type="number" class="qty-input" value="${item.stock}" min="0" oninput="updateStock(${item.id}, this.value)"></td>
+            <td class="col-orderqty"><input type="number" class="qty-input" style="border-color:var(--secondary);" value="${item.orderQty}" min="0" oninput="updateOrderQty(${item.id}, this.value)"></td>
+            <td class="col-subtotal subtotal-tag"><span class="txt-order-sub">0</span></td>
+            <td class="col-invtotal subtotal-tag" style="color:#d35400;"><span class="txt-inv-sub">0</span></td>
+            <td class="col-action" style="text-align: center;"><button class="btn-reset" onclick="deleteItem(${item.id})">✖</button></td>
+        `;
+        tbody.appendChild(row);
+    });
+    calculateTotals();
+}
+
+function calculateTotals() {
+    const rate = parseFloat(document.getElementById('exchangeRate').value) || 0;
+    const markup = parseFloat(document.getElementById('markup').value) / 100 || 0;
+    let grandOrder = 0; let grandInv = 0;
+
+    items.forEach(item => {
+        const unitPrice = item.isManual ? item.manualTwd : Math.round((item.jpy * rate) * (1 + markup));
+        const costPrice = item.isManual ? item.manualTwd : Math.round(item.jpy * rate);
+        const orderSub = unitPrice * (item.orderQty || 0);
+        const invSub = costPrice * (item.stock || 0);
+        
+        grandOrder += orderSub; grandInv += invSub;
+
+        const row = document.getElementById(`row-${item.id}`);
+        if(row) {
+            row.querySelector('.txt-order-sub').innerText = `NT$ ${orderSub}`;
+            row.querySelector('.txt-inv-sub').innerText = `NT$ ${invSub}`;
+        }
+    });
+
+    document.getElementById('grandTotalOrder').innerText = `NT$ ${grandOrder}`;
+    document.getElementById('grandTotalInv').innerText = `NT$ ${grandInv}`;
+}
+
+function switchView(view) {
+    document.body.className = `view-${view}`; 
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.getElementById(view === 'admin' ? 'btnAdmin' : view === 'quote' ? 'btnQuote' : view === 'order' ? 'btnOrder' : 'btnInv').classList.add('active');
+}
+
+function copyToGoogleSheet() {
+    if (items.length === 0) return alert("目前沒有商品可以匯出！");
+    const rate = parseFloat(document.getElementById('exchangeRate').value) || 0;
+    const markup = parseFloat(document.getElementById('markup').value) / 100 || 0;
+    
+    let tsvData = "商品圖片\t商品名稱\t日幣成本(¥)\t台幣售價(NT$)\t目前庫存\n";
+    items.forEach(item => {
+        const unitPrice = item.isManual ? item.manualTwd : Math.round((item.jpy * rate) * (1 + markup));
+        const imageFormula = item.originalImg ? `=IMAGE("${item.originalImg}")` : "";
+        tsvData += `${imageFormula}\t${item.name}\t${item.jpy}\t${unitPrice}\t${item.stock}\n`;
+    });
+
+    navigator.clipboard.writeText(tsvData).then(() => {
+        alert("✅ 複製成功！\n請打開您的 Google Sheet，點選第一格 (A1)，然後按下貼上！");
+    }).catch(err => {
+        alert("複製失敗，您的瀏覽器可能不支援剪貼簿功能。");
+    });
+}
+
+function resetAll() {
+    if (confirm("確定要清空所有資料嗎？")) { localStorage.clear(); location.reload(); }
+}
+</script>
+
+</body>
+</html>
